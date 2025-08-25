@@ -1,12 +1,276 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Stock Portfolio Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Stock Dashboard (Upload & Analyze)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- DataTables CSS -->
+  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+  <!-- Chart.js + Matrix Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1.0/dist/chartjs-chart-matrix.min.js"></script>
+
+  <style>
+    body { background-color: #1e1e2f; color: #f5f5f5; }
+    .sidebar { background: #151521; min-height: 100vh; padding: 20px; }
+    .nav-link { color: #bbb; }
+    .nav-link.active { background: #0d6efd; color: #fff; border-radius: 8px; }
+    .kpi-card { background: #2a2a3d; border-radius: 12px; padding: 18px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    .kpi-value { font-size: 1.4rem; font-weight: 700; }
+    .kpi-label { font-size: .85rem; color: #aaa; }
+    canvas { background: #2a2a3d; border-radius: 12px; padding: 10px; }
+    .small { color: #bfbfbf; }
+    table.dataTable thead { background-color: #2a2a3d; color: #fff; }
+    .hidden-section { display: none; }
+  </style>
 </head>
 <body>
-    <h1>Stock Portfolio Dashboard</h1>
-    <p>hello</p>
-    <script src="script.js"></script>
+<div class="container-fluid">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar">
+      <h4>📁 Upload CSV</h4>
+      <form id="upload-form">
+        <input class="form-control form-control-sm mb-2" type="file" id="csvFile" accept=".csv" required />
+        <button class="btn btn-primary btn-sm w-100" type="submit">Upload & Analyze</button>
+      </form>
+      <hr class="border-secondary"/>
+      <div class="small" id="upload-status">No file uploaded yet.</div>
+
+      <h5 class="mt-4">Navigation</h5>
+      <ul class="nav flex-column nav-pills">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#overview">Overview</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#analysis">Analysis</a></li>
+      </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="col-md-10 p-4">
+      <div class="tab-content">
+
+        <!-- Overview -->
+        <div class="tab-pane fade show active" id="overview">
+          <h2>Uploaded File Summary</h2>
+          
+          <!-- Summary KPIs -->
+          <div id="overview-section" class="hidden-section">
+            <div class="row g-3" id="summary-kpis"></div>
+            
+            <!-- Preview table -->
+            <div class="mt-4">
+              <h5>Preview (first 10 rows)</h5>
+              <div id="preview-box" class="table-responsive mt-2"></div>
+            </div>
+            
+            <!-- Extra insights -->
+            <div class="mt-4">
+              <h5>Extra Insights</h5>
+              <div class="row g-3" id="extra-kpis"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis -->
+        <div class="tab-pane fade" id="analysis">
+          <h2>Analysis</h2>
+          <div id="analysis-section" class="hidden-section">
+
+            <!-- KPIs -->
+            <div class="row g-3" id="metrics-kpis"></div>
+
+            <!-- Charts -->
+            <div class="row g-3 mt-3">
+              <div class="col-md-12">
+                <h5>📈 Stock Price Over Time</h5>
+                <canvas id="priceChart"></canvas>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+              <div class="col-md-12">
+                <h5>📊 Moving Averages (20 & 50)</h5>
+                <canvas id="maChart"></canvas>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+              <div class="col-md-12">
+                <h5>📉 20-Day Rolling Volatility</h5>
+                <canvas id="volatilityChart"></canvas>
+              </div>
+            </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+  const API_BASE = "http://127.0.0.1:5000";
+  let CURRENT_TOKEN = null;
+
+  // Chart variables
+  let priceChart = null;
+  let maChart = null;
+  let volatilityChart = null;
+  let corrHeatmap = null;
+
+  function kpi(label, value) {
+    return `<div class="col-md-3"><div class="kpi-card">
+      <div class="kpi-value">${value ?? "—"}</div>
+      <div class="kpi-label">${label}</div>
+    </div></div>`;
+  }
+
+  function showPreview(el, rows) {
+    if (!rows || !rows.length) {
+      el.innerHTML = "<em>No data</em>";
+      return;
+    }
+    const cols = Object.keys(rows[0]);
+    let html = "<table id='preview-table' class='table table-dark table-striped table-bordered table-sm' style='width:100%'>";
+    html += "<thead><tr>";
+    cols.forEach(c => { html += `<th>${c}</th>`; });
+    html += "</tr></thead><tbody>";
+    rows.forEach(r => {
+      html += "<tr>";
+      cols.forEach(c => { html += `<td>${r[c] ?? ""}</td>`; });
+      html += "</tr>";
+    });
+    html += "</tbody></table>";
+    el.innerHTML = html;
+    $('#preview-table').DataTable({ paging: true, searching: true, ordering: true, pageLength: 5, lengthChange: false });
+  }
+
+  // Upload
+  document.getElementById("upload-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById("csvFile");
+    if (!fileInput.files.length) return;
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    document.getElementById("upload-status").textContent = "Uploading…";
+    try {
+      const res = await fetch(`${API_BASE}/upload-csv`, { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) { document.getElementById("upload-status").textContent = `Error: ${data.error || res.status}`; return; }
+      CURRENT_TOKEN = data.token;
+      document.getElementById("upload-status").textContent = `Uploaded. Token: ${CURRENT_TOKEN}`;
+
+      // Show Overview
+      document.getElementById("overview-section").style.display = "block";
+
+      // Summary KPIs
+      const s = data.summary;
+      document.getElementById("summary-kpis").innerHTML = [
+        kpi("Rows", s.rows), kpi("Columns", s.cols),
+        kpi("Can Analyze (Close)", s.can_analyze ? "Yes" : "No"),
+        kpi("Date Range", (s.date_min && s.date_max) ? `${s.date_min} → ${s.date_max}` : "—"),
+      ].join("");
+
+      // Preview table
+      showPreview(document.getElementById("preview-box"), data.preview);
+
+      // Extra insights
+      if (data.extra) {
+        const e = data.extra;
+        const extraKpis = [];
+        for (let [key, val] of Object.entries(e)) {
+          extraKpis.push(kpi(key, val));
+        }
+        document.getElementById("extra-kpis").innerHTML = extraKpis.join("");
+      }
+
+      // Analysis section load
+      if (s.can_analyze) { 
+        document.getElementById("analysis-section").style.display = "block";
+        await loadMetrics(); 
+      }
+      else { document.getElementById("metrics-kpis").innerHTML = ""; }
+    } catch (err) { document.getElementById("upload-status").textContent = `Upload failed: ${err}`; }
+  });
+
+  async function loadMetrics() {
+    if (!CURRENT_TOKEN) return;
+
+    // KPIs
+    const res = await fetch(`${API_BASE}/analyze/${CURRENT_TOKEN}/metrics`);
+    const m = await res.json();
+    if (res.ok) {
+      document.getElementById("metrics-kpis").innerHTML = [
+        kpi("Avg Daily Return", m["Average Daily Return"]),
+        kpi("Volatility", m["Volatility"]),
+        kpi("Sharpe Ratio", m["Sharpe Ratio"]),
+        kpi("VaR (95%)", m["VaR (95%)"]),
+      ].join("");
+    }
+
+    // Charts
+    const res2 = await fetch(`${API_BASE}/analyze/${CURRENT_TOKEN}/charts`);
+    const charts = await res2.json();
+    if (res2.ok) {
+      // 1. Stock Price
+      const ctx1 = document.getElementById("priceChart").getContext("2d");
+      if (priceChart) priceChart.destroy();
+      priceChart = new Chart(ctx1, {
+        type: "line",
+        data: {
+          labels: charts.price_chart.map(d => d.Date),
+          datasets: [{
+            label: "Close Price",
+            data: charts.price_chart.map(d => d.Close),
+            borderColor: "#36a2eb",
+            fill: false,
+            tension: 0.3
+          }]
+        }
+      });
+
+      // 2. Moving Averages
+      const ctx2 = document.getElementById("maChart").getContext("2d");
+      if (maChart) maChart.destroy();
+      maChart = new Chart(ctx2, {
+        type: "line",
+        data: {
+          labels: charts.ma_chart.map(d => d.Date),
+          datasets: [
+            { label: "Close Price", data: charts.ma_chart.map(d => d.Close), borderColor: "#36a2eb", tension: 0.3 },
+            { label: "20-Day MA", data: charts.ma_chart.map(d => d.MA20), borderColor: "orange", tension: 0.3 },
+            { label: "50-Day MA", data: charts.ma_chart.map(d => d.MA50), borderColor: "green", tension: 0.3 }
+          ]
+        }
+      });
+
+      // 3. Rolling Volatility
+      const ctx3 = document.getElementById("volatilityChart").getContext("2d");
+      if (volatilityChart) volatilityChart.destroy();
+      volatilityChart = new Chart(ctx3, {
+        type: "line",
+        data: {
+          labels: charts.volatility.map(d => d.Date),
+          datasets: [{ label: "20-Day Volatility", data: charts.volatility.map(d => d.Rolling_Volatility), borderColor: "#ff6384", tension: 0.3 }]
+        }
+      });
+
+      // 4. Correlation Heatmap
+
+
+    }}
+</script>
 </body>
 </html>
