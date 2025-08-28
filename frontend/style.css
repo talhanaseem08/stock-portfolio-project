@@ -1,1 +1,119 @@
-body { font-family: Arial; background: #f9f9f9; }
+body { 
+    background-color: #1e1e2f; 
+    color: #f5f5f5; 
+}
+
+.sidebar { 
+    background: #151521; 
+    min-height: 100vh; 
+    padding: 20px; 
+}
+
+.nav-link { 
+    color: #bbb; 
+    cursor: pointer;
+}
+
+.nav-link.active { 
+    background: #0d6efd; 
+    color: #fff; 
+    border-radius: 8px; 
+}
+
+.kpi-card {
+    background: #2a2a3d; 
+    border-radius: 12px; 
+    padding: 18px; 
+    text-align: center; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
+  
+}
+
+.kpi-value { 
+    font-size: 1.4rem; 
+    font-weight: 700; 
+}
+
+.kpi-label { 
+    font-size: .85rem; 
+    color: #aaa; 
+}
+
+canvas { 
+    background: #2a2a3d; 
+    border-radius: 12px; 
+    padding: 10px; 
+}
+
+.small { 
+    color: #bfbfbf; 
+}
+
+table.dataTable thead {
+    background-color: #2a2a3d; 
+    color: #fff; 
+}
+
+.hidden-section { 
+    display: none; 
+}
+
+/* ------------------------- */
+/* Cleanup Modal Styling     */
+/* ------------------------- */
+
+#metaCleanupModal .modal-content {
+    background: #1e1e2f;
+    border-radius: 12px;
+    border: 1px solid #444;
+}
+
+#cleanup-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+}
+
+#cleanup-preview th, 
+#cleanup-preview td {
+    padding: 8px;
+    border: 1px solid #444;
+    text-align: center;
+}
+
+#cleanup-preview th {
+    background: #2a2a3d;
+    color: #fff;
+}
+
+.column-removed {
+    background: #3b3b3b !important;
+    color: #999 !important;
+    text-decoration: line-through;
+    position: relative;
+}
+
+.column-removed::after {
+    content: "Removed";
+    color: #ff6b6b;
+    font-size: 0.75rem;
+    font-weight: bold;
+    position: absolute;
+    top: 4px;
+    right: 6px;
+}
+
+.remove-col-btn {
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background: #ff6b6b;
+    color: white;
+    transition: 0.2s;
+}
+
+.remove-col-btn:hover {
+    background: #e64545;
+}
