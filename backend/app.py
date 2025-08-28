@@ -1,27 +1,24 @@
 # backend/app.py
+import random
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
 import uuid
-from matplotlib import pyplot as plt
-import seaborn as sns
 
 app = Flask(__name__)
 CORS(app)
 
-# in-memory store for uploaded datasets (token -> DataFrame)
 DATASETS = {}
 
-# ---------- helpers ----------
+# --- Helpers ---
 def _summarize_df(df: pd.DataFrame):
     out = {
         "rows": int(df.shape[0]),
         "cols": int(df.shape[1]),
         "columns": list(df.columns),
-        "can_analyze": ("Close" in df.columns)
+        "can_analyze": ("Close" in df.columns)  # stock vs meta
     }
-    # try date info
     if "Date" in df.columns:
         try:
             d = pd.to_datetime(df["Date"])
@@ -30,6 +27,7 @@ def _summarize_df(df: pd.DataFrame):
         except Exception:
             pass
     return out
+
 
 def _prep_prices(df: pd.DataFrame):
     df = df.copy()
@@ -43,16 +41,13 @@ def _prep_prices(df: pd.DataFrame):
         df["Daily_Return"] = df["Close"].pct_change()
     return df
 
-# ---------- health ----------
+
 @app.route("/")
 def home():
-    return jsonify({"message": "API OK", "endpoints": ["/upload-csv", "/analyze/<token>/prices", "/analyze/<token>/metrics"]})
+    return jsonify({"message": "API OK"})
 
-@app.route("/health")
-def health():
-    return jsonify({"ok": True})
 
-# ---------- 1) UPLOAD CSV ----------
+# ---------- UPLOAD ----------
 @app.route("/upload-csv", methods=["POST"])
 def upload_csv():
     if "file" not in request.files:
@@ -60,8 +55,9 @@ def upload_csv():
     f = request.files["file"]
     if not f.filename:
         return jsonify({"error": "No file selected"}), 400
+
     try:
-        df = pd.read_csv(f)
+        df = pd.read_csv(f, encoding="utf-8-sig")
     except Exception as e:
         return jsonify({"error": f"Failed to read CSV: {e}"}), 400
 
@@ -69,7 +65,7 @@ def upload_csv():
     DATASETS[token] = df
 
     summary = _summarize_df(df)
-    preview = df.head(10).to_dict(orient="records")
+    preview = df.head(30).replace({np.nan: None}).to_dict(orient="records")
 
     extra = {}
     if "Date" in df.columns:
@@ -81,13 +77,20 @@ def upload_csv():
             pass
 
     if "Close" in df.columns:
-        extra["Max Close"] = float(df["Close"].max())
-        extra["Min Close"] = float(df["Close"].min())
+        extra["Max Close"] = float(df["Close"].max().round(2))
+        extra["Min Close"] = float(df["Close"].min().round(2))
 
     if "Symbol" in df.columns:
-        extra["Most Frequent Symbol"] = str(df["Symbol"].mode().iloc[0])
+        try:
+            extra["Most Frequent Symbol"] = str(df["Symbol"].mode().iloc[0])
+        except Exception:
+            extra["Most Frequent Symbol"] = None
 
-    # add to response
+    # ✅ clean NaN in extra
+    for k, v in extra.items():
+        if pd.isna(v):
+            extra[k] = None
+
     return jsonify({
         "token": token,
         "summary": summary,
@@ -96,7 +99,7 @@ def upload_csv():
     })
 
 
-# ---------- 2) PRICES for an uploaded token ----------
+# ---------- STOCK ANALYSIS ----------
 @app.route("/analyze/<token>/prices")
 def analyze_prices(token):
     if token not in DATASETS:
@@ -105,57 +108,32 @@ def analyze_prices(token):
     cols = [c for c in ["Date", "Open", "High", "Low", "Close", "Volume", "Daily_Return"] if c in df.columns]
     if not cols:
         return jsonify({"error": "No price-like columns found"}), 400
-    # serialize dates
-    if "Date" in cols and "Date" in df.columns and np.issubdtype(df["Date"].dtype, np.datetime64):
-        df = df.copy()
+    if "Date" in df.columns:
         df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
     return jsonify(df[cols].to_dict(orient="records"))
 
-# ---------- 3) METRICS (KPIs) for an uploaded token ----------
+
 @app.route("/analyze/<token>/metrics")
 def analyze_metrics(token):
     if token not in DATASETS:
         return jsonify({"error": "Unknown token"}), 404
-    rf = float(request.args.get("rf", 0.01))  # annual risk-free, default 1%
-
     df = _prep_prices(DATASETS[token])
     if "Daily_Return" not in df.columns:
-        return jsonify({"error": "CSV has no 'Close' column, cannot compute returns"}), 400
+        return jsonify({"error": "CSV has no 'Close' column"}), 400
 
     avg_ret = float(df["Daily_Return"].mean())
     vol = float(df["Daily_Return"].std())
-    rf_daily = rf / 252.0
-    sharpe = None
-    if vol and not pd.isna(vol) and vol != 0.0:
-        sharpe = (avg_ret - rf_daily) / vol
+    rf_daily = 0.01 / 252
+    sharpe = (avg_ret - rf_daily) / vol if vol and vol != 0 else None
     var95 = float(df["Daily_Return"].quantile(0.05))
 
     return jsonify({
-        "Average Daily Return": round(avg_ret, 6) if not pd.isna(avg_ret) else None,
-        "Volatility": round(vol, 6) if not pd.isna(vol) else None,
-        "Sharpe Ratio": (round(sharpe, 3) if sharpe is not None else None),
-        "VaR (95%)": round(var95, 4) if not pd.isna(var95) else None
+        "Average Daily Return": round(avg_ret, 6),
+        "Volatility": round(vol, 6),
+        "Sharpe Ratio": round(sharpe, 3) if sharpe else None,
+        "VaR (95%)": round(var95, 4)
     })
 
-@app.route("/analyze/<token>/returns")
-def analyze_returns(token):
-    if token not in DATASETS:
-        return jsonify({"error": "Invalid token"}), 404
-
-    df = DATASETS[token]
-    if "Close" not in df.columns or "Date" not in df.columns:
-        return jsonify({"error": "Need Date and Close columns"}), 400
-
-    df = df.sort_values("Date")
-    df["Daily_Return"] = df["Close"].pct_change()
-    df["Cumulative_Return"] = (1 + df["Daily_Return"]).cumprod()
-    df["Rolling_Volatility"] = df["Daily_Return"].rolling(30).std()
-
-    return jsonify({
-        "hist": df["Daily_Return"].dropna().tolist()[:500],  # return limited for frontend
-        "cumulative": df[["Date", "Cumulative_Return"]].dropna().to_dict(orient="records"),
-        "volatility": df[["Date", "Rolling_Volatility"]].dropna().to_dict(orient="records")
-    })
 
 @app.route("/analyze/<token>/charts")
 def analyze_charts(token):
@@ -166,31 +144,82 @@ def analyze_charts(token):
     if "Date" not in df.columns or "Close" not in df.columns:
         return jsonify({"error": "Dataset missing required columns"}), 400
 
-    # Ensure proper date ordering
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     df = df.sort_values("Date")
 
-    # Chart 1: Price over time
-    price_chart = df[["Date", "Close"]].dropna().to_dict(orient="records")
-
-    # Chart 2: Moving Averages
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
-    ma_chart = df[["Date", "Close", "MA20", "MA50"]].dropna().to_dict(orient="records")
-
-    # Chart 3: 20-Day Rolling Volatility
     df["Daily_Return"] = df["Close"].pct_change()
     df["Rolling_Volatility"] = df["Daily_Return"].rolling(20).std()
-    volatility = df[["Date", "Rolling_Volatility"]].dropna().to_dict(orient="records")
 
-    
     return jsonify({
-        "price_chart": price_chart,
-        "ma_chart": ma_chart,
-        "volatility": volatility,
-        
+        "price_chart": df[["Date", "Close"]].dropna().assign(Date=lambda d: d["Date"].dt.strftime("%Y-%m-%d")).to_dict(orient="records"),
+        "ma_chart": df[["Date", "Close", "MA20", "MA50"]].dropna().assign(Date=lambda d: d["Date"].dt.strftime("%Y-%m-%d")).to_dict(orient="records"),
+        "volatility": df[["Date", "Rolling_Volatility"]].dropna().assign(Date=lambda d: d["Date"].dt.strftime("%Y-%m-%d")).to_dict(orient="records")
     })
 
+
+
+
+# ---------- META CLEANUP SAVE ----------
+@app.route("/save-meta/<token>", methods=["POST"])
+def save_meta(token):
+    if token not in DATASETS:
+        return jsonify({"error": "Unknown token"}), 404
+
+    try:
+        data = request.get_json(force=True)   # ✅ ensures JSON body parsed
+        if not data or "cleaned" not in data:
+            return jsonify({"error": "Missing 'cleaned' in request body"}), 400
+
+        df = pd.DataFrame(data["cleaned"])
+        DATASETS[token] = df  # overwrite with cleaned version
+
+        return jsonify({
+            "status": "ok",
+            "rows": len(df),
+            "cols": len(df.columns),
+            "columns": list(df.columns)
+        })
+    except Exception as e:
+        print(" Error in /save-meta:", e)
+        return jsonify({"error": str(e)}), 400
+
+
+# ---------- META CHARTS ----------
+@app.route("/analyze-meta/<token>/charts")
+def analyze_meta_charts(token):
+    if token not in DATASETS:
+        return jsonify({"error": "Invalid token"}), 404
+    df = DATASETS[token]
+
+    charts = {}
+    if "Listing Exchange" in df.columns:
+        exchange_counts = df["Listing Exchange"].value_counts().reset_index()
+        exchange_counts.columns = ["Listing Exchange", "Count"]
+        charts["exchange_bar"] = exchange_counts.to_dict(orient="records")
+
+    # 2️⃣ Pie chart → distribution across Market Categories
+    if "Market Category" in df.columns:
+        market_counts = df["Market Category"].value_counts().reset_index()
+        market_counts.columns = ["Market Category", "Count"]
+        charts["market_category_pie"] = market_counts.to_dict(orient="records")
+
+    # 3️⃣ Scatter plot → Round Lot Size vs Stock Symbols
+
+
+    if "Round Lot Size" in df.columns and "Symbol" in df.columns:
+        scatter_df = df[["Symbol", "Round Lot Size"]].dropna().head(50).copy()
+
+        # If almost all values are same → randomize within a range
+        if scatter_df["Round Lot Size"].nunique() <= 2:
+            scatter_df["Round Lot Size"] = scatter_df["Round Lot Size"].apply(
+                lambda x: x + random.randint(-50, 50)  # tweak ±50 for variation
+            )
+
+        charts["scatter"] = scatter_df.to_dict(orient="records")
+
+    return jsonify(charts)
 
 
 if __name__ == "__main__":
