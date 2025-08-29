@@ -58,9 +58,7 @@ table.dataTable thead {
     display: none; 
 }
 
-/* ------------------------- */
-/* Cleanup Modal Styling     */
-/* ------------------------- */
+
 
 #metaCleanupModal .modal-content {
     background: #1e1e2f;
@@ -116,4 +114,145 @@ table.dataTable thead {
 
 .remove-col-btn:hover {
     background: #e64545;
+}
+
+
+.nav-link.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  color: #6c757d !important;
+  background-color: transparent !important;
+  border-color: #dee2e6 !important;
+  position: relative;
+}
+
+.nav-link.disabled:hover {
+  cursor: not-allowed;
+  background-color: transparent !important;
+  border-color: #dee2e6 !important;
+}
+
+.nav-link.disabled::after {
+  font-size: 0.8em;
+  font-style: italic;
+  color: #6c757d;
+}
+
+
+.column-removed {
+  display: none !important;
+}
+
+
+.modal-content {
+  border-radius: 15px;
+}
+
+.modal-header {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 2px solid #dee2e6;
+}
+
+
+#cleanup-preview .table th {
+  background-color: #343a40;
+  color: white;
+  border: 1px solid #495057;
+  padding: 12px 8px;
+  position: relative;
+}
+
+#cleanup-preview .table td {
+  border: 1px solid #495057;
+  padding: 8px;
+}
+
+
+#cleanup-preview .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+#cleanup-preview .btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+  transform: scale(1.1);
+}
+
+#scatterPlot {
+  max-width: 100%;
+  border: 1px solid #666;
+  background: #1e1e2f;
+}
+
+/* Scatter plot container styling */
+.scatter-chart-container {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border: 2px solid #444;
+  padding: 20px;
+  background: #2a2a3d;
+  border-radius: 12px;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Exchange chart container styling - same as pie chart */
+.exchange-chart-container {
+  width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  border: 2px solid #444;
+  padding: 20px;
+  background: #2a2a3d;
+  border-radius: 12px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#exchangeBar {
+  max-width: 100%;
+  border: 1px solid #666;
+  background: #1e1e2f;
+  width: 470px !important;
+  height: 350px !important;
+}
+
+/* Pie chart container styling */
+.pie-chart-container {
+  width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  border: 2px solid #444;
+  padding: 20px;
+  background: #2a2a3d;
+  border-radius: 12px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#marketPie {
+  max-width: 100%;
+  border: 1px solid #666;
+  background: #1e1e2f;
+  width: 470px !important;
+  height: 350px !important;
 }
