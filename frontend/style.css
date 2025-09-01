@@ -49,10 +49,161 @@ canvas {
     color: #bfbfbf; 
 }
 
-table.dataTable thead {
-    background-color: #2a2a3d; 
-    color: #fff; 
+
+table.dataTable {
+    background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%) !important;
+    border-radius: 12px !important;
+    border: 1px solid #444 !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    table-layout: auto !important;
 }
+
+table.dataTable thead {
+    background: linear-gradient(90deg, #343a40 0%, #495057 100%) !important;
+    color: #f8f9fa !important;
+    border-bottom: 2px solid #0d6efd !important;
+}
+
+table.dataTable thead tr {
+    display: table-row !important;
+}
+
+table.dataTable.no-footer {
+    border-bottom: 1px solid #444 !important;
+}
+
+
+.dataTables_scrollHead table thead tr {
+    display: table-row !important;
+}
+
+.dataTables_scrollHead table thead {
+    display: table-header-group !important;
+}
+
+.dataTables_scroll {
+    overflow-x: auto !important;
+}
+
+table.dataTable thead th {
+    background: linear-gradient(90deg, #343a40 0%, #495057 100%) !important;
+    color: #f8f9fa !important;
+    font-weight: 600 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid #555 !important;
+    padding: 8px 6px !important;
+    position: relative !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+}
+
+table.dataTable tbody tr {
+    background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%) !important;
+    transition: all 0.3s ease !important;
+    border-bottom: 1px solid #444 !important;
+}
+
+table.dataTable tbody tr:hover {
+    background: linear-gradient(135deg, #3a3a4d 0%, #2e2e3f 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+table.dataTable tbody td {
+    color: #f5f5f5 !important;
+    border: 1px solid #444 !important;
+    padding: 6px 8px !important;
+    font-weight: 500 !important;
+}
+
+.dataTables_wrapper {
+    background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%) !important;
+    border-radius: 16px !important;
+    border: 1px solid #444 !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    padding: 12px !important;
+    margin: 10px 0 !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
+
+
+.dataTables_wrapper table {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+}
+
+
+.dataTables_wrapper .dataTables_scroll {
+    padding: 0 15px !important;
+}
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    padding: 10px 5px !important;
+}
+
+.dataTables_wrapper table thead {
+    display: table-header-group !important;
+}
+
+.dataTables_wrapper table thead tr {
+    display: table-row !important;
+}
+
+.dataTables_wrapper table thead th {
+    display: table-cell !important;
+    white-space: nowrap !important;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    color: #f8f9fa !important;
+    font-weight: 500 !important;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    background: #343a40 !important;
+    color: #f8f9fa !important;
+    border: 1px solid #555 !important;
+    border-radius: 6px !important;
+    padding: 5px 8px !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: linear-gradient(135deg, #343a40 0%, #495057 100%) !important;
+    color: #f8f9fa !important;
+    border: 1px solid #555 !important;
+    border-radius: 6px !important;
+    margin: 0 2px !important;
+    padding: 6px 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%) !important;
+    color: #fff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%) !important;
+    color: #fff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3) !important;
+}
+
+.table-card-wrapper { display: contents; }
+.table-card-wrapper:hover { box-shadow: none; transform: none; }
+.table-responsive { background: transparent !important; border: 0 !important; box-shadow: none !important; }
 
 .hidden-section { 
     display: none; 
@@ -187,72 +338,433 @@ table.dataTable thead {
   transform: scale(1.1);
 }
 
-#scatterPlot {
+
+.chart-container {
+  background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%);
+  border: 2px solid #444;
+  border-radius: 16px;
+  padding: 25px;
+  margin: 20px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0d6efd, #6f42c1, #fd7e14);
+  border-radius: 16px 16px 0 0;
+}
+
+.card.bg-dark {
+  background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%) !important;
+  border: 1px solid #444;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.bg-dark:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.card-header {
+  background: linear-gradient(90deg, #343a40 0%, #495057 100%) !important;
+  border-bottom: 2px solid #0d6efd;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 15px 20px;
+}
+
+.card-header h5, .card-header h6 {
+  color: #f8f9fa;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-body {
+  padding: 20px;
+  position: relative;
+}
+
+.card-body canvas {
+  margin: 0;
+  display: block;
+}
+
+canvas {
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid #555;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  max-height: 500px !important;
+  height: auto !important;
+  width: 100% !important;
+}
+
+canvas:hover {
+  border-color: #0d6efd;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 20px rgba(13, 110, 253, 0.2);
+}
+
+#exchangeBar {
   max-width: 100%;
   border: 1px solid #666;
-  background: #1e1e2f;
-}
-
-/* Scatter plot container styling */
-.scatter-chart-container {
-  width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border: 2px solid #444;
-  padding: 20px;
-  background: #2a2a3d;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  width: 470px !important;
+  height: 350px !important;
+  max-height: 350px !important;
   border-radius: 12px;
-  min-height: 500px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  padding: 10px;
 }
 
-/* Exchange chart container styling - same as pie chart */
+#marketPie {
+  max-width: 100%;
+  border: 1px solid #666;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  width: 470px !important;
+  height: 350px !important;
+  max-height: 350px !important;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+#scatterPlot {
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #444;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  border-radius: 12px;
+  min-height: 400px;
+  max-height: 500px !important;
+  height: 500px !important;
+  max-width: 100%;
+  width: 100% !important;
+  padding: 15px;
+}
+
+#priceChart {
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #444;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  border-radius: 12px;
+  width: 100% !important;
+  height: 400px !important;
+  max-height: 400px !important;
+  padding: 15px;
+}
+
+#maChart {
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #444;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  border-radius: 12px;
+  width: 100% !important;
+  height: 400px !important;
+  max-height: 400px !important;
+  padding: 15px;
+}
+
+#volatilityChart {
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #444;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  border-radius: 12px;
+  width: 100% !important;
+  height: 400px !important;
+  max-height: 400px !important;
+  padding: 15px;
+}
+
 .exchange-chart-container {
   width: 520px;
   margin: 0 auto;
   text-align: center;
   border: 2px solid #444;
   padding: 20px;
-  background: #2a2a3d;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%);
+  border-radius: 16px;
   min-height: 400px;
+  max-height: 450px;
+  height: 450px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-#exchangeBar {
-  max-width: 100%;
-  border: 1px solid #666;
-  background: #1e1e2f;
-  width: 470px !important;
-  height: 350px !important;
-}
-
-/* Pie chart container styling */
 .pie-chart-container {
   width: 520px;
   margin: 0 auto;
   text-align: center;
   border: 2px solid #444;
   padding: 20px;
-  background: #2a2a3d;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%);
+  border-radius: 16px;
   min-height: 400px;
+  max-height: 450px;
+  height: 450px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-#marketPie {
-  max-width: 100%;
-  border: 1px solid #666;
-  background: #1e1e2f;
-  width: 470px !important;
-  height: 350px !important;
+.scatter-chart-container {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border: 2px solid #444;
+  padding: 20px;
+  background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%);
+  border-radius: 16px;
+  min-height: 500px;
+  max-height: 550px;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
+
+
+.chart-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.chart-loading::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid #0d6efd;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+@media (max-width: 768px) {
+  .exchange-chart-container,
+  .pie-chart-container {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  #exchangeBar,
+  #marketPie {
+    width: 100% !important;
+    height: 300px !important;
+    max-height: 300px !important;
+  }
+  
+  #scatterPlot,
+  #priceChart,
+  #maChart,
+  #volatilityChart {
+    height: 350px !important;
+    max-height: 350px !important;
+  }
+  
+  .scatter-chart-container {
+    height: 400px !important;
+    max-height: 400px !important;
+  }
+}
+
+.chart-container,
+.scatter-chart-container,
+.exchange-chart-container,
+.pie-chart-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.chart-container canvas,
+.scatter-chart-container canvas,
+.exchange-chart-container canvas,
+.pie-chart-container canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain;
+}
+
+.chartjs-tooltip {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid #0d6efd !important;
+  border-radius: 8px !important;
+  color: #f8f9fa !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+}
+
+.chartjs-legend {
+  background: rgba(42, 42, 61, 0.9) !important;
+  border: 1px solid #555 !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+}
+
+.kpi-card {
+  background: linear-gradient(135deg, #2a2a3d 0%, #1e1e2f 100%);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  border: 1px solid #444;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f8f9fa;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.kpi-label {
+  font-size: .85rem;
+  color: #aaa;
+  margin-top: 5px;
+}
+#meta-analysis .tab-pane {
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 10px 0;
+}
+
+
+#meta-advanced-analysis .card {
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+#meta-advanced-analysis .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+table.dataTable {
+  border: 1px solid #3a3a4a !important;
+  border-radius: 12px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+table.dataTable thead th {
+  text-transform: none !important;
+  letter-spacing: .2px !important;
+  font-size: 0.95rem !important;
+  border-bottom: 1px solid #3c3f4a !important;
+}
+
+table.dataTable tbody td {
+  border: none !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+table.dataTable tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+table.dataTable.stripe tbody tr:nth-of-type(odd),
+table.dataTable.display tbody tr:nth-of-type(odd) {
+  background: rgba(255,255,255,0.02) !important;
+}
+
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 15px !important;
+    padding: 0 5px !important;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+  height: 32px !important;
+  padding: 4px 10px !important;
+  border-radius: 8px !important;
+  border: 1px solid #3c3f4a !important;
+}
+
+
+.dataTables_wrapper .dataTables_paginate {
+  display: flex !important;
+  justify-content: right !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 0 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  background: transparent !important;
+  color: #d8d8e2 !important;
+  border: none !important;
+  padding: 0px 0px !important; 
+  line-height: 1 !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  font-size: 0.9rem !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: transparent !important; 
+  color: #0d6efd !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+  background: #0d6efd !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+  opacity: .5 !important;
+  background: transparent !important;
+  color: #b3b3c2 !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+  color: #cfcfe6 !important;
+}
+
+.dataTables_wrapper .dataTables_filter label,
+.dataTables_wrapper .dataTables_length label {
+  color: #cfcfe6 !important;
+}
+

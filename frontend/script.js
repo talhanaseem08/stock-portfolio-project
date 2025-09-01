@@ -150,7 +150,18 @@ function renderMetaOverview(preview) {
   fetchMetaKPIs();
 }
 
-// ---------- Fetch Stock Analysis ----------
+
+function handleChartResize() {
+  Object.keys(activeCharts).forEach(chartId => {
+    if (activeCharts[chartId]) {
+      activeCharts[chartId].resize();
+    }
+  });
+}
+
+
+window.addEventListener('resize', handleChartResize);
+
 async function fetchStockAnalysis() {
   if (!currentToken) return;
 
@@ -176,7 +187,7 @@ async function fetchStockAnalysis() {
   renderLineChart("volatilityChart", charts.volatility, "Rolling_Volatility", "20-Day Rolling Volatility");
 }
 
-// ---------- Fetch Meta Analysis ----------
+
 async function fetchmetaAnalysis() {
   if (!currentToken) return;
 
@@ -196,32 +207,29 @@ async function fetchmetaAnalysis() {
   if (charts.market_category_pie) {
     //console.log("Rendering market category pie chart with data:", charts.market_category_pie);
     
-    // Update debug info
-    document.getElementById("pie-debug").innerHTML = `Data: ${JSON.stringify(charts.market_category_pie)}`;
+    //document.getElementById("pie-debug").innerHTML = `Data: ${JSON.stringify(charts.market_category_pie)}`;
     
     renderPieChart("marketPie", charts.market_category_pie, "Market Category", "Count", "Market Categories");
   } else {
     console.log("No market category pie chart data available");
     document.getElementById("pie-debug").innerHTML = "No data available for pie chart";
     
-    // Render a test pie chart to ensure the canvas works
-    const testData = [
-      { "Market Category": "Test 1", "Count": 50 },
-      { "Market Category": "Test 2", "Count": 30 },
-      { "Market Category": "Test 3", "Count": 20 }
-    ];
+    
+    // const testData = [
+    //   { "Market Category": "Test 1", "Count": 50 },
+    //   { "Market Category": "Test 2", "Count": 30 },
+    //   { "Market Category": "Test 3", "Count": 20 }
+    // ];
     renderPieChart("marketPie", testData, "Market Category", "Count", "Test Chart");
   }
   if (charts.scatter) {
     console.log("Rendering scatter chart");
     renderScatterChart("scatterPlot", charts.scatter, "Symbol", "Round Lot Size", "Symbol vs Round Lot Size");
   }
-  
-  // Fetch and render advanced analysis
+ 
   await fetchMetaAdvancedAnalysis();
 }
 
-// ---------- Fetch Meta KPIs ----------
 async function fetchMetaKPIs() {
   if (!currentToken) return;
   
@@ -231,13 +239,13 @@ async function fetchMetaKPIs() {
     
     let kpiBox = document.getElementById("summary-kpis");
     
-    // 1. Unique Stocks on NASDAQ
+ 
     let uniqueStocksCard = kpiBox.querySelector('.col-md-3:nth-child(1) .kpi-value');
     if (uniqueStocksCard) {
       uniqueStocksCard.textContent = kpis["Unique Stocks"] || "N/A";
     }
     
-    // 2. Exchange Distribution
+
     let exchangeCard = kpiBox.querySelector('.col-md-3:nth-child(2) .kpi-value');
     if (exchangeCard) {
       if (kpis["Exchange Distribution"] && kpis["Exchange Distribution"] !== "N/A") {
@@ -248,13 +256,13 @@ async function fetchMetaKPIs() {
       }
     }
     
-    // 3. ETF Count
+   
     let etfCard = kpiBox.querySelector('.col-md-3:nth-child(3) .kpi-value');
     if (etfCard) {
       etfCard.textContent = kpis["ETF Count"] || "N/A";
     }
     
-    // 4. ETF vs Non-ETF
+
     let etfVsNonEtfCard = kpiBox.querySelector('.col-md-3:nth-child(4) .kpi-value');
     if (etfVsNonEtfCard && kpis["ETF vs Non-ETF"] && kpis["ETF vs Non-ETF"] !== "N/A") {
       etfVsNonEtfCard.textContent = `${kpis["ETF vs Non-ETF"]["ETF Percentage"]}% / ${kpis["ETF vs Non-ETF"]["Non-ETF Percentage"]}%`;
@@ -267,7 +275,7 @@ async function fetchMetaKPIs() {
   }
 }
 
-// ---------- Meta Cleanup Modal ----------
+
 function showMetaCleanupModal(preview) {
   const modal = new bootstrap.Modal(document.getElementById("metaCleanupModal"));
   renderCleanupTable(preview);
@@ -330,10 +338,19 @@ document.getElementById("saveMetaCleanup").addEventListener("click", async () =>
   await fetchmetaAnalysis();
 });
 
+
+document.getElementById("cancel-cleanup").addEventListener("click", async() => {
+  bootstrap.Modal.getInstance(document.getElementById("metaCleanupModal")).hide();
+  renderMetaOverview(metaPreviewData);
+  await fetchmetaAnalysis();
+  
+});
 function renderTable(containerId, data) {
   if (!data || !data.length) return;
   let container = document.getElementById(containerId);
   let cols = Object.keys(data[0]);
+
+  
   let html = `<table id="${containerId}-table" class="table table-dark table-striped"><thead><tr>`;
   cols.forEach(c => (html += `<th>${c}</th>`));
   html += `</tr></thead><tbody>`;
@@ -346,7 +363,16 @@ function renderTable(containerId, data) {
   container.innerHTML = html;
 
   $(`#${containerId}-table`).DataTable({
-    pageLength: 5
+    pageLength: 5,
+    responsive: false,
+    scrollX: false,
+    autoWidth: false,
+    language: {
+      search: "Search:",
+      lengthMenu: "Show _MENU_ entries",
+      info: "Showing _START_ to _END_ of _TOTAL_ entries",
+      paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+    }
   });
 }
 
@@ -369,8 +395,103 @@ function renderLineChart(canvasId, data, yKey, label) {
         label,
         data: data.map(d => d[yKey]),
         borderColor: "#0d6efd",
-        fill: false
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 8,
+        pointBackgroundColor: '#0d6efd',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 2000,
+        easing: 'easeInOutQuart'
+      },
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Date',
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            },
+            maxTicksLimit: 10
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: yKey,
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#f8f9fa',
+          bodyColor: '#f8f9fa',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          cornerRadius: 8,
+          mode: 'index',
+          intersect: false
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      }
     }
   });
 }
@@ -378,6 +499,14 @@ function renderLineChart(canvasId, data, yKey, label) {
 function renderMultiLineChart(canvasId, data, keys, label) {
   destroyChart(canvasId);
   let ctx = document.getElementById(canvasId).getContext("2d");
+  const colors = [
+    { border: '#0d6efd', background: 'rgba(13, 110, 253, 0.1)' },
+    { border: '#fd7e14', background: 'rgba(253, 126, 20, 0.1)' },
+    { border: '#20c997', background: 'rgba(32, 201, 151, 0.1)' },
+    { border: '#dc3545', background: 'rgba(220, 53, 69, 0.1)' },
+    { border: '#6f42c1', background: 'rgba(111, 66, 193, 0.1)' }
+  ];
+  
   activeCharts[canvasId] = new Chart(ctx, {
     type: "line",
     data: {
@@ -385,9 +514,106 @@ function renderMultiLineChart(canvasId, data, keys, label) {
       datasets: keys.map((k, i) => ({
         label: k,
         data: data.map(d => d[k]),
-        borderColor: ["#0d6efd", "orange", "green"][i],
-        fill: false
+        borderColor: colors[i % colors.length].border,
+        backgroundColor: colors[i % colors.length].background,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 8,
+        pointBackgroundColor: colors[i % colors.length].border,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
       }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 2000,
+        easing: 'easeInOutQuart'
+      },
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Date',
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            },
+            maxTicksLimit: 10
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Price',
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            },
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#f8f9fa',
+          bodyColor: '#f8f9fa',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          cornerRadius: 8,
+          mode: 'index',
+          intersect: false
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      }
     }
   });
 }
@@ -395,6 +621,11 @@ function renderMultiLineChart(canvasId, data, keys, label) {
 function renderBarChart(canvasId, data, xKey, yKey, label) {
   destroyChart(canvasId);
   let ctx = document.getElementById(canvasId).getContext("2d");
+  const colors = [
+    '#0d6efd', '#6f42c1', '#fd7e14', '#20c997', '#dc3545',
+    '#ffc107', '#6610f2', '#e83e8c', '#fd7e14', '#28a745'
+  ];
+  
   activeCharts[canvasId] = new Chart(ctx, {
     type: "bar",
     data: {
@@ -402,46 +633,80 @@ function renderBarChart(canvasId, data, xKey, yKey, label) {
       datasets: [{
         label,
         data: data.map(d => d[yKey]),
-        backgroundColor: "#0d6efd"
+        backgroundColor: data.map((_, index) => colors[index % colors.length]),
+        borderColor: data.map((_, index) => colors[index % colors.length]),
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false,
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: {
+        duration: 2000,
+        easing: 'easeInOutQuart'
+      },
       scales: {
         x: {
           title: {
             display: true,
             text: xKey,
-            color: '#f5f5f5',
+            color: '#f8f9fa',
             font: {
               size: 14,
               weight: 'bold'
             }
           },
           ticks: {
-            color: '#f5f5f5'
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
           }
         },
         y: {
           title: {
             display: true,
             text: yKey,
-            color: '#f5f5f5',
+            color: '#f8f9fa',
             font: {
               size: 14,
               weight: 'bold'
             }
           },
           ticks: {
-            color: '#f5f5f5'
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
           }
         }
       },
       plugins: {
         legend: {
-          labels: {
-            color: '#f5f5f5'
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#f8f9fa',
+          bodyColor: '#f8f9fa',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              return `${context.parsed.y} ${yKey}`;
+            }
           }
         }
       }
@@ -467,6 +732,11 @@ function renderPieChart(canvasId, data, labelKey, valueKey, label) {
   }
   
   console.log(`Canvas dimensions: ${canvas.width} x ${canvas.height}`);
+  const colors = [
+    '#0d6efd', '#6f42c1', '#fd7e14', '#20c997', '#dc3545',
+    '#ffc107', '#6610f2', '#e83e8c', '#fd7e14', '#28a745',
+    '#17a2b8', '#6c757d', '#343a40', '#495057', '#868e96'
+  ];
   
   try {
     activeCharts[canvasId] = new Chart(ctx, {
@@ -476,19 +746,48 @@ function renderPieChart(canvasId, data, labelKey, valueKey, label) {
         datasets: [{
           label,
           data: data.map(d => d[valueKey]),
-          backgroundColor: ["#0d6efd", "orange", "green", "purple", "red"]
+          backgroundColor: data.map((_, index) => colors[index % colors.length]),
+          borderColor: '#2a2a3d',
+          borderWidth: 3,
+          hoverBorderColor: '#0d6efd',
+          hoverBorderWidth: 4
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+          duration: 2000,
+          easing: 'easeInOutQuart'
+        },
         plugins: {
           legend: {
             position: 'bottom',
             labels: {
-              color: '#f5f5f5',
+              color: '#f8f9fa',
               font: {
-                size: 12
+                size: 12,
+                weight: 'bold'
+              },
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            titleColor: '#f8f9fa',
+            bodyColor: '#f8f9fa',
+            borderColor: '#0d6efd',
+            borderWidth: 1,
+            cornerRadius: 8,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
               }
             }
           }
@@ -499,7 +798,6 @@ function renderPieChart(canvasId, data, labelKey, valueKey, label) {
     console.log(`Pie chart rendered successfully: ${canvasId}`);
   } catch (error) {
     console.error(`Error rendering pie chart ${canvasId}:`, error);
-    // Try to show error on the page
     const debugElement = document.getElementById("pie-debug");
     if (debugElement) {
       debugElement.innerHTML += `<br><span class="text-danger">Chart rendering error: ${error.message}</span>`;
@@ -510,15 +808,10 @@ function renderPieChart(canvasId, data, labelKey, valueKey, label) {
 function renderScatterChart(canvasId, data, xKey, yKey, label) {
   destroyChart(canvasId);
   let ctx = document.getElementById(canvasId).getContext("2d");
-  
-  // For meta data, we need to handle the case where xKey might be Symbol (string)
-  // We'll use the index as x-axis for better visualization
   let chartData;
   if (xKey === "Symbol") {
-    // For meta data scatter plot, use index as x-axis
     chartData = data.map((d, index) => ({ x: index, y: d[yKey] }));
   } else {
-    // For regular scatter plots
     chartData = data.map(d => ({ x: d[xKey], y: d[yKey] }));
   }
   
@@ -528,29 +821,80 @@ function renderScatterChart(canvasId, data, xKey, yKey, label) {
       datasets: [{
         label,
         data: chartData,
-        backgroundColor: "#0d6efd",
-        pointRadius: 6
+        backgroundColor: '#0d6efd',
+        borderColor: '#6f42c1',
+        borderWidth: 2,
+        pointRadius: 8,
+        pointHoverRadius: 12,
+        pointHoverBackgroundColor: '#fd7e14',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 3
       }]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 2000,
+        easing: 'easeInOutQuart'
+      },
       scales: {
         x: {
           type: 'linear',
           position: 'bottom',
           title: {
             display: true,
-            text: xKey === "Symbol" ? "Stock Index" : xKey
+            text: xKey === "Symbol" ? "Stock Index" : xKey,
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
           }
         },
         y: {
           title: {
             display: true,
-            text: yKey
+            text: yKey,
+            color: '#f8f9fa',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            color: '#f5f5f5',
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
           }
         }
       },
       plugins: {
+        legend: {
+          display: false
+        },
         tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#f8f9fa',
+          bodyColor: '#f8f9fa',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          cornerRadius: 8,
           callbacks: {
             label: function(context) {
               if (xKey === "Symbol") {
@@ -567,7 +911,125 @@ function renderScatterChart(canvasId, data, xKey, yKey, label) {
   });
 }
 
-// ---------- Fetch Meta Advanced Analysis ----------
+function renderCorrelationMatrix(canvasId, correlationData, columns) {
+  destroyChart(canvasId);
+  
+  let canvas = document.getElementById(canvasId);
+  if (!canvas) {
+    console.error(`Canvas element not found for: ${canvasId}`);
+    return;
+  }
+  
+  let ctx = canvas.getContext("2d");
+  
+  
+  const matrixSize = columns.length;
+  const matrix = Array(matrixSize).fill().map(() => Array(matrixSize).fill(0));
+  
+
+  correlationData.forEach(item => {
+    const i = columns.indexOf(item.Column1);
+    const j = columns.indexOf(item.Column2);
+    matrix[i][j] = item.Correlation;
+    matrix[j][i] = item.Correlation; // Make symmetric
+  });
+  
+
+  const datasets = columns.map((col, i) => ({
+    label: col,
+    data: matrix[i].map((val, j) => ({ x: j, y: i, v: val })),
+    backgroundColor: matrix[i].map(val => {
+      const intensity = Math.abs(val);
+      if (val < 0) {
+        return `rgba(220, 53, 69, ${intensity})`; 
+      } else if (val > 0) {
+        return `rgba(13, 110, 253, ${intensity})`; 
+      } else {
+        return 'rgba(255, 255, 255, 0.1)';
+      }
+    }),
+    borderColor: '#444',
+    borderWidth: 1,
+    pointRadius: 0
+  }));
+  
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          min: -0.5,
+          max: matrixSize - 0.5,
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return columns[Math.round(value)] || '';
+            },
+            color: '#f5f5f5',
+            font: { size: 12 }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
+          }
+        },
+        y: {
+          type: 'linear',
+          min: -0.5,
+          max: matrixSize - 0.5,
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return columns[Math.round(value)] || '';
+            },
+            color: '#f5f5f5',
+            font: { size: 12 }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)',
+            drawBorder: false
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#f8f9fa',
+          bodyColor: '#f8f9fa',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            title: function(context) {
+              const x = Math.round(context[0].parsed.x);
+              const y = Math.round(context[0].parsed.y);
+              return `${columns[y]} vs ${columns[x]}`;
+            },
+            label: function(context) {
+              return `Correlation: ${context.parsed.v.toFixed(3)}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+
 async function fetchMetaAdvancedAnalysis() {
   if (!currentToken) return;
   
@@ -581,14 +1043,12 @@ async function fetchMetaAdvancedAnalysis() {
   }
 }
 
-// ---------- Render Meta Advanced Analysis ----------
 function renderMetaAdvancedAnalysis(analysis) {
   const container = document.getElementById("meta-advanced-analysis");
   if (!container) return;
   
   let html = '<div class="row g-3">';
   
-  // ETF vs Non-ETF Analysis
   if (analysis.etf_percentages) {
     html += `
       <div class="col-md-6">
@@ -597,57 +1057,45 @@ function renderMetaAdvancedAnalysis(analysis) {
             <h6>ETF vs Non-ETF Distribution</h6>
           </div>
           <div class="card-body">
-            <div class="row">
-              <div class="col-6">
-                <div class="kpi-card">
-                  <div class="kpi-value text-success">${analysis.etf_percentages["ETF Percentage"]}%</div>
-                  <div class="kpi-label">ETF</div>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="kpi-card">
-                  <div class="kpi-value text-warning">${analysis.etf_percentages["Non-ETF Percentage"]}%</div>
-                  <div class="kpi-label">Non-ETF</div>
-                </div>
-              </div>
-            </div>
+            <canvas id="etfVsNonEtfBar"></canvas>
           </div>
         </div>
       </div>
     `;
+
+    setTimeout(() => {
+      const chartData = [
+        { "Status": "ETF", "Percentage": analysis.etf_percentages["ETF Percentage"] },
+        { "Status": "Non-ETF", "Percentage": analysis.etf_percentages["Non-ETF Percentage"] }
+      ];
+      renderBarChart("etfVsNonEtfBar", chartData, "Status", "Percentage", "ETF vs Non-ETF (%)");
+    }, 100);
   }
   
-  // Market Cap Stats
-  if (analysis.market_cap_stats) {
+  
+  if (analysis.top_round_lot && analysis.top_round_lot.length) {
     html += `
       <div class="col-md-6">
         <div class="card bg-dark text-light">
           <div class="card-header">
-            <h6>Market Cap Statistics</h6>
+            <h6>Top 10 Companies by Round Lot Size</h6>
           </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-6">
-                <div class="kpi-card">
-                  <div class="kpi-value">${analysis.market_cap_stats.mean.toLocaleString()}</div>
-                  <div class="kpi-label">Mean</div>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="kpi-card">
-                  <div class="kpi-value">${analysis.market_cap_stats.median.toLocaleString()}</div>
-                  <div class="kpi-label">Median</div>
-                </div>
-              </div>
-            </div>
-          </div>
+                     <div class="card-body">
+             <canvas id="topRoundLotChart"></canvas>
+           </div>
         </div>
       </div>
     `;
-  }
-  
-  // Financial Status Analysis
-  if (analysis.financial_status) {
+
+    setTimeout(() => {
+      const data = analysis.top_round_lot.map(d => ({
+        "Symbol": d.Symbol,
+        "Round Lot Size": d["Round Lot Size"]
+      }));
+      renderBarChart("topRoundLotChart", data, "Symbol", "Round Lot Size", "Top 10 Round Lot Size");
+    }, 100);
+  } else if (analysis.financial_status) {
+   
     html += `
       <div class="col-md-6">
         <div class="card bg-dark text-light">
@@ -672,77 +1120,52 @@ function renderMetaAdvancedAnalysis(analysis) {
   }
   
   // Test Issue Analysis
-  if (analysis.test_issue) {
-    html += `
-      <div class="col-md-6">
-        <div class="card bg-dark text-light">
-          <div class="card-header">
-            <h6>Test Issue Distribution</h6>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              ${analysis.test_issue.map(item => `
-                <div class="col-6 mb-2">
-                  <div class="kpi-card">
-                    <div class="kpi-value">${item.Count}</div>
-                    <div class="kpi-label">${item["Test Issue"] || "Unknown"}</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  // if (analysis.test_issue) {
+  //   html += `
+  //     <div class="col-md-6">
+  //       <div class="card bg-dark text-light">
+  //         <div class="card-header">
+  //           <h6>Test Issue Distribution</h6>
+  //         </div>
+  //         <div class="card-body">
+  //           <div class="row">
+  //             ${analysis.test_issue.map(item => `
+  //               <div class="col-6 mb-2">
+  //                 <div class="kpi-card">
+  //                   <div class="kpi-value">${item.Count}</div>
+  //                   <div class="kpi-label">${item["Test Issue"] || "Unknown"}</div>
+  //                 </div>
+  //               </div>
+  //             `).join('')}
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+  // }
   
   // Round Lot Size Distribution
-  if (analysis.round_lot_distribution) {
-    html += `
-      <div class="col-md-12">
-        <div class="card bg-dark text-light">
-          <div class="card-header">
-            <h6>Round Lot Size Distribution</h6>
-          </div>
-          <div class="card-body">
-            <canvas id="roundLotChart"></canvas>
-          </div>
-        </div>
-      </div>
-    `;
+  // if (analysis.round_lot_distribution) {
+  //   html += `
+  //     <div class="col-md-12">
+  //       <div class="card bg-dark text-light">
+  //         <div class="card-header">
+  //           <h6>Round Lot Size Distribution</h6>
+  //         </div>
+  //         <div class="card-body">
+  //           <canvas id="roundLotChart"></canvas>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
     
-    // Render the chart after DOM is updated
-    setTimeout(() => {
-      if (analysis.round_lot_distribution.length > 0) {
-        renderBarChart("roundLotChart", analysis.round_lot_distribution, "Round Lot Size Range", "Count", "Round Lot Size Distribution");
-      }
-    }, 100);
-  }
-  
-  // Sector Distribution (if available)
-  if (analysis.sector_distribution) {
-    html += `
-      <div class="col-md-12">
-        <div class="card bg-dark text-light">
-          <div class="card-header">
-            <h6>Top 10 Sectors</h6>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              ${analysis.sector_distribution.map(item => `
-                <div class="col-md-3 mb-2">
-                  <div class="kpi-card">
-                    <div class="kpi-value">${item.Count}</div>
-                    <div class="kpi-label">${item.Sector || "Unknown"}</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  //   // Render the chart after DOM is updated
+  //   setTimeout(() => {
+  //     if (analysis.round_lot_distribution.length > 0) {
+  //       renderBarChart("roundLotChart", analysis.round_lot_distribution, "Round Lot Size Range", "Count", "Round Lot Size Distribution");
+  //     }
+  //   }, 100);
+  // }
   
   html += '</div>';
   container.innerHTML = html;
